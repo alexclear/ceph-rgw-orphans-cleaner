@@ -26,12 +26,13 @@
 
 ;; Function to delete an object
 (defn delete-object [object]
-  (let [result (shell {:out :string :err :string :continue true} 
+  (let [result (shell {:out :string :err :string :continue true}
                       "rados" "-p" pool-name "rm" object)]
     (if (zero? (:exit result))
       (println "Successfully deleted:" object)
       (binding [*out* *err*]
-        (println "Failed to delete:" object)))))
+        (println "Failed to delete:" object)
+        (println "Error message:" (:err result))))))
 
 ;; Read file and process in batches
 (with-open [reader (io/reader input-file)]
