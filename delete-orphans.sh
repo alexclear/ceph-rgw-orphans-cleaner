@@ -2,8 +2,7 @@
 
 POOL_NAME="ceph-objectstore.rgw.buckets.data"
 cd /tmp
-rgw-orphan-list "${POOL_NAME}"
-INPUT_FILE="./orphan-list-20250310124953.out"
+INPUT_FILE=$(rgw-orphan-list "${POOL_NAME}" | grep -oP "(?<=The results can be found in ').*?(?=')")
 
 while IFS= read -r object; do
 if rados -p "$POOL_NAME" rm "$object"; then
