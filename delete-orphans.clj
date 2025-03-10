@@ -17,10 +17,9 @@
 (System/setProperty "user.dir" "/tmp")
 
 ;; Get the input file containing the list of orphaned objects
+(def output (:out (shell {:out :string} "rgw-orphan-list" pool-name)))
 (def input-file 
-  (-> (shell {:out :string} "rgw-orphan-list" pool-name)
-      :out
-      (re-find #"(?<=The results can be found in ').*?(?=')")))
+  (second (re-find #"The results can be found in '([^']+)'" output)))
 
 (println "Processing orphans from file:" input-file)
 (println "Using batch size:" batch-size)
