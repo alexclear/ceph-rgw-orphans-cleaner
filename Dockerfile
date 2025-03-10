@@ -17,6 +17,5 @@ gpgkey=https://download.ceph.com/keys/release.asc
 EOF
 RUN yum install -y python3 python3-pip
 
-COPY delete-orphans.sh /tmp/
 COPY delete-orphans.clj /tmp/
 CMD ["/bin/bash", "-c", "/tmp/delete-orphans.sh"]
