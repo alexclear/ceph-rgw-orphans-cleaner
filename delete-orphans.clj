@@ -39,7 +39,8 @@
   (let [objects (filter #(not (str/blank? %)) (line-seq reader))]
     (doseq [batch (partition-all batch-size objects)]
       (println "Processing batch of" (count batch) "objects...")
-      (doseq [obj batch]
-        (delete-object obj)))))
+      ;; Replace sequential doseq with parallel processing
+      (doall (pmap delete-object batch))
+      (println "Batch completed"))))
 
 (println "Deletion process completed")
