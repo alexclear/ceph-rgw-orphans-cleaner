@@ -8,7 +8,7 @@
 (def pool-name "ceph-objectstore.rgw.buckets.data")
 
 ;; Parse command line arguments for batch size (default 10)
-(def batch-size 
+(def batch-size
   (if-let [batch-arg (first (filter #(str/starts-with? % "--batch=") *command-line-args*))]
     (Integer/parseInt (second (str/split batch-arg #"=")))
     10))
@@ -18,11 +18,15 @@
 
 ;; Get the input file containing the list of orphaned objects
 (def output (:out (shell {:out :string} "rgw-orphan-list" pool-name)))
-(def input-file 
+(def input-file
   (second (re-find #"The results can be found in '([^']+)'" output)))
 
 (println "Processing orphans from file:" input-file)
 (println "Using batch size:" batch-size)
+
+(defn shadow-object? [object]
+  ;; Match typical RGW tail names like "...__shadow_.<token>_<n>"
+  (boolean (re-find #"__shadow_" object)))
 
 ;; Function to delete an object
 (defn delete-object [object]
@@ -34,13 +38,22 @@
         (println "Failed to delete:" object)
         (println "Error message:" (:err result))))))
 
+;; Process one object: delete only if it's a shadow; otherwise print "Skipped"
+(defn process-object [object]
+  (let [o (str/trim object)]
+    (when-not (str/blank? o)
+      (if (shadow-object? o)
+        (delete-object o)
+        (println "Skipped:" o)))))
+
 ;; Read file and process in batches
 (with-open [reader (io/reader input-file)]
-  (let [objects (filter #(not (str/blank? %)) (line-seq reader))]
+  (let [objects (->> (line-seq reader)
+                     (map str/trim)
+                     (remove str/blank?))]
     (doseq [batch (partition-all batch-size objects)]
       (println "Processing batch of" (count batch) "objects...")
-      ;; Replace sequential doseq with parallel processing
-      (doall (pmap delete-object batch))
+      (doall (pmap process-object batch))
       (println "Batch completed"))))
 
 (println "Deletion process completed")
