@@ -18,4 +18,4 @@ EOF
 RUN yum install -y python3 python3-pip
 
 COPY delete-orphans.clj /tmp/
-CMD ["/bin/bash", "-c", "/tmp/delete-orphans.sh"]
+CMD ["/usr/bin/env", "bb", "/tmp/delete-orphans.clj"]
